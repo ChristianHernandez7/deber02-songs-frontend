@@ -1,114 +1,201 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useEffect, useState } from 'react';
+import { getSongs, createSong, deleteSong, updateSong } from '../services/songsService';
 
 export default function Home() {
-  return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/pages/index.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [songs, setSongs] = useState([]);
+  const [songName, setSongName] = useState('');
+  const [songPath, setSongPath] = useState('');
+  const [selectedSong, setSelectedSong] = useState(null); // Canción seleccionada para actualizar
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const data = await getSongs();
+        setSongs(data);
+      } catch (error) {
+        console.error('Error fetching songs:', error);
+      }
+    };
+
+    fetchSongs();
+  }, []);
+
+  const handleCreateSong = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const newSong = {
+        song_name: songName,
+        song_path: songPath,
+      };
+      await createSong(newSong);
+
+      const updatedSongs = await getSongs();
+      setSongs(updatedSongs);
+
+      setSongName('');
+      setSongPath('');
+      alert('Canción creada exitosamente!');
+    } catch (error) {
+      console.error('Error creating song:', error);
+    }
+  };
+
+  const handleDeleteSong = async (id_song: number) => {
+    try {
+      await deleteSong(id_song);
+
+      const updatedSongs = songs.filter((song) => song.id_song !== id_song);
+      setSongs(updatedSongs);
+
+      alert('Canción eliminada exitosamente!');
+    } catch (error) {
+      console.error('Error deleting song:', error);
+    }
+  };
+
+  // Manejar la selección de una canción para actualizar
+  const handleSelectSong = (song: any) => {
+    setSelectedSong(song);
+    setSongName(song.song_name);
+    setSongPath(song.song_path);
+  };
+
+  // Manejar la actualización de la canción seleccionada
+  const handleUpdateSong = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSong) return;
+
+    try {
+      const updatedData = {
+        song_name: songName,
+        song_path: songPath,
+      };
+      await updateSong(selectedSong.id_song, updatedData);
+
+      const updatedSongs = await getSongs();
+      setSongs(updatedSongs);
+
+      setSelectedSong(null);
+      setSongName('');
+      setSongPath('');
+      alert('Canción actualizada exitosamente!');
+    } catch (error) {
+      console.error('Error updating song:', error);
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Gestión de Canciones</h1>
+
+      {/* Formulario para crear canciones */}
+      <form onSubmit={handleCreateSong} className="mb-6">
+        <h2 className="text-xl font-semibold mb-2">Crear una Nueva Canción</h2>
+        <div className="mb-4">
+          <label htmlFor="songName" className="block font-medium mb-1">
+            Nombre de la canción
+          </label>
+          <input
+            type="text"
+            id="songName"
+            value={songName}
+            onChange={(e) => setSongName(e.target.value)}
+            required
+            className="w-full border px-3 py-2 rounded"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+        <div className="mb-4">
+          <label htmlFor="songPath" className="block font-medium mb-1">
+            Ruta del archivo
+          </label>
+          <input
+            type="text"
+            id="songPath"
+            value={songPath}
+            onChange={(e) => setSongPath(e.target.value)}
+            required
+            className="w-full border px-3 py-2 rounded"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          Crear Canción
+        </button>
+      </form>
+
+      {/* Formulario para actualizar canciones */}
+      {selectedSong && (
+        <form onSubmit={handleUpdateSong} className="mb-6">
+          <h2 className="text-xl font-semibold mb-2">Actualizar Canción</h2>
+          <div className="mb-4">
+            <label htmlFor="updateSongName" className="block font-medium mb-1">
+              Nuevo nombre de la canción
+            </label>
+            <input
+              type="text"
+              id="updateSongName"
+              value={songName}
+              onChange={(e) => setSongName(e.target.value)}
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="updateSongPath" className="block font-medium mb-1">
+              Nueva ruta del archivo
+            </label>
+            <input
+              type="text"
+              id="updateSongPath"
+              value={songPath}
+              onChange={(e) => setSongPath(e.target.value)}
+              required
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Actualizar Canción
+          </button>
+        </form>
+      )}
+
+      {/* Lista de canciones */}
+      <h2 className="text-xl font-semibold mb-2">Lista de Canciones</h2>
+      <ul className="space-y-4">
+        {songs.map((song) => (
+          <li
+            key={song.id_song}
+            className="border p-4 rounded flex justify-between items-center"
+          >
+            <div>
+              <p className="text-lg font-medium">🎵 {song.song_name}</p>
+              <p className="text-sm text-gray-500">Reproducciones: {song.plays}</p>
+              <audio controls className="mt-2">
+                <source src={song.song_path} type="audio/mpeg" />
+              </audio>
+            </div>
+            <div>
+              <button
+                onClick={() => handleSelectSong(song)}
+                className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 mr-2"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => handleDeleteSong(song.id_song)}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+              >
+                Eliminar
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

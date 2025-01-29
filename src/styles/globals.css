@@ -19,3 +19,13 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* globals.css */
+body {
+  @apply bg-gray-100 text-gray-900;
+}
+
+.container {
+  @apply max-w-4xl mx-auto;
+}
+
