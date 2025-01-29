@@ -1,11 +1,20 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from 'react';
 import { getSongs, createSong, deleteSong, updateSong } from '../services/songsService';
 
+// Define la interfaz Song para describir la estructura de las canciones
+interface Song {
+  id_song: number;
+  song_name: string;
+  song_path: string;
+  plays: number;
+}
+
 export default function Home() {
-  const [songs, setSongs] = useState([]);
+  const [songs, setSongs] = useState<Song[]>([]); // Ahora TypeScript conoce el tipo de canciones
   const [songName, setSongName] = useState('');
   const [songPath, setSongPath] = useState('');
-  const [selectedSong, setSelectedSong] = useState(null); // Canción seleccionada para actualizar
+  const [selectedSong, setSelectedSong] = useState<Song | null>(null); // Puede ser Song o null
 
   useEffect(() => {
     const fetchSongs = async () => {
@@ -53,14 +62,12 @@ export default function Home() {
     }
   };
 
-  // Manejar la selección de una canción para actualizar
-  const handleSelectSong = (song: any) => {
+  const handleSelectSong = (song: Song) => { // El tipo de song es ahora Song
     setSelectedSong(song);
     setSongName(song.song_name);
     setSongPath(song.song_path);
   };
 
-  // Manejar la actualización de la canción seleccionada
   const handleUpdateSong = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedSong) return;
