@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000';
+const API_URL = 'https://backend-songs-service-341898809698.us-central1.run.app';
 
 export const getSongs = async () => {
   const response = await axios.get(`${API_URL}/songs`);
